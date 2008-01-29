@@ -12,11 +12,17 @@
 import re
 import popen2
 
+chunk_regex = re.compile("""
+	^               # beginning of string
+	File:\s?        # static text
+	([^\s]*)        # filename
+	\s*Status:\s?   # static text
+	(.*)            # status
+	$               # eol
+""", re.VERBOSE) 
+
 def filter_content(fh):
-	status_lines = []
-	for line in [line for line in fh.readlines() if line[0] != '?' and "cvs status:" not in line]:
-		status_lines.append(line)
-	return status_lines
+	return [line for line in fh.readlines() if line[0] != '?' and "cvs status:" not in line]
 		
 def file_chunks(status_lines):
 	if "[status aborted]" in status_lines[0]:
@@ -27,24 +33,12 @@ def file_chunks(status_lines):
 		yield(result)
 
 def filter_changed(status_lines):		
-	changed = []
-	chunk_regex = re.compile("""
-		^               # beginning of string
-		File:\s?        # static text
-		([^\s]*)        # filename
-		\s*Status:\s?   # static text
-		(.*)            # status
-		$               # eol
-	""", re.VERBOSE) 
-	for chunk in file_chunks(status_lines):
-		if chunk != None and not "Up-to-date" in chunk:
-			changed.append(chunk_regex.search(chunk).groups())
-	return changed
+	return [chunk_regex.search(chunk).groups() for chunk in file_chunks(status_lines) if not "Up-to-date" in chunk]
 
 def print_changed(changed):
-	for f in changed:
-		column_filling = (50 - len(f[0])) * " "
-		print "File: %s%sStatus: %s" % (f[0], column_filling, f[1])
+	text = "File: %s%sStatus: %s"
+	column_filling = lambda filename: (50 - len(filename)) * " "
+	print "\n".join([text % (f[0], column_filling(f[0]), f[1]) for f in changed])
 	print "\n", ("There are %s out-of-sync files in your working tree." % len(changed)), "\n"
 
 if __name__ == '__main__':

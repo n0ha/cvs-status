@@ -29,12 +29,12 @@ def file_chunks(status_lines):
 def filter_changed(status_lines):		
 	changed = []
 	chunk_regex = re.compile("""
-		^				# beginning of string
-		File:\s?		# static text
-		([^\s]*)		# filename
-		\s*Status:\s?	# static text
-		(.*)			# status
-		$				# eol
+		^               # beginning of string
+		File:\s?        # static text
+		([^\s]*)        # filename
+		\s*Status:\s?   # static text
+		(.*)            # status
+		$               # eol
 	""", re.VERBOSE) 
 	for chunk in file_chunks(status_lines):
 		if chunk != None and not "Up-to-date" in chunk:

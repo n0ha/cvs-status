@@ -42,10 +42,11 @@ def cvs_status():
 
 def _filter_spam(content):
     """Filter out non-relevant lines from CVS output."""
-    return [line for line in content if line[0] != '?' and "cvs status:" not in line]
+    return [line for line in content 
+            if not line.startswith('?') and "cvs status:" not in line]
 
 def _file_chunks(content):
-    """Split content into chunks.
+    """Split content into chunks, and return the informational line.
 
     CVS spits out information on a single file in 8 lines.
     To process this information, we split the output to file-related
@@ -55,7 +56,7 @@ def _file_chunks(content):
     while len(content) > 0:
         chunk = content[0:9]
         del content[0:9]
-        yield(chunk)
+        yield(chunk[1])
 
 def _filter_unchanged(content):
     """Filter out Up-to-date files from CVS output.
@@ -67,19 +68,26 @@ def _filter_unchanged(content):
 
     """
     chunks = _file_chunks(_filter_spam(content.readlines()))
-    return [FILE_STATUS.search(chunk[1]).groups() for chunk in chunks if not "Up-to-date" in chunk[1]]
+    return [_FILE_STATUS.search(chunk).groups() for chunk in chunks 
+            if not "Up-to-date" in chunk]
 
 def _report(changed):
     """Print out-of-sync files in two pretty columns.
 
     Extracted filenames and statuses are printed in two columns,
     along with a total count at the end.
+    
+    Expects list of tuples.
 
     """
-    file_message = "File: %s%sStatus: %s"
-    column_filling = lambda filename: (50 - len(filename)) * " "
-    print "\n".join([file_message % (f[0], column_filling(f[0]), f[1]) for f in changed])
-    print "\n", ("There are %s out-of-sync files in your working tree." % len(changed)), "\n"
+    file_msg = "File: %s%sStatus: %s"
+    info_msg = "There are %s out-of-sync files in your working tree."
+    column_filling = lambda text: (50 - len(text)) * " "
+    
+    status_list = [file_msg % (filename, column_filling(filename), status) 
+                   for filename, status in changed]
+    print "\n".join(status_list)
+    print "\n", (info_msg % len(changed)), "\n"
 
 def _get_cvs_output():
     """Runs 'CVS status' command and returns its output.

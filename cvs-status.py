@@ -1,6 +1,8 @@
-#!/usr/bin/python
+"""Module to extract and print a list of out-of-sync files in CVS repo.
 
-"""Extract and print a list of out-of-sync files in CVS repo.
+Usage:
+from cvsstatus import cvs_status
+cvs_status()
 
 Uses 'cvs status' command. Expects user to be logged in to
 CVS, and current working dir to be the root of a CVS working dir.
@@ -25,7 +27,7 @@ _FILE_STATUS = re.compile("""
 """, re.VERBOSE)
 
 # Enables test mode
-_TEST = False
+_TEST = True
 
 def cvs_status():
     """Extract and print a list of out-of-sync files in CVS repo.
@@ -101,5 +103,3 @@ def _get_cvs_output():
         raise EnvironmentError
     return p.fromchild
 
-if __name__ == '__main__':
-    cvs_status()

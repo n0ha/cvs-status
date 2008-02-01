@@ -27,7 +27,7 @@ _FILE_STATUS = re.compile("""
 """, re.VERBOSE)
 
 # Enables test mode
-_TEST = True
+_TEST = False
 
 def cvs_status():
     """Extract and print a list of out-of-sync files in CVS repo.
@@ -44,7 +44,7 @@ def cvs_status():
 
 def _filter_spam(content):
     """Filter out non-relevant lines from CVS output."""
-    return [line for line in content 
+    return [line for line in content
             if not line.startswith('?') and "cvs status:" not in line]
 
 def _file_chunks(content):
@@ -70,7 +70,7 @@ def _filter_unchanged(content):
 
     """
     chunks = _file_chunks(_filter_spam(content.readlines()))
-    return [_FILE_STATUS.search(chunk).groups() for chunk in chunks 
+    return [_FILE_STATUS.search(chunk).groups() for chunk in chunks
             if not "Up-to-date" in chunk]
 
 def _report(changed):
@@ -78,15 +78,15 @@ def _report(changed):
 
     Extracted filenames and statuses are printed in two columns,
     along with a total count at the end.
-    
+
     Expects list of tuples.
 
     """
     file_msg = "File: %s%sStatus: %s"
     info_msg = "There are %s out-of-sync files in your working tree."
     column_filling = lambda text: (50 - len(text)) * " "
-    
-    status_list = [file_msg % (filename, column_filling(filename), status) 
+
+    status_list = [file_msg % (filename, column_filling(filename), status)
                    for filename, status in changed]
     print "\n".join(status_list)
     print "\n", (info_msg % len(changed)), "\n"
@@ -102,4 +102,3 @@ def _get_cvs_output():
     if p.wait():
         raise EnvironmentError
     return p.fromchild
-
